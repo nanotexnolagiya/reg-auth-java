@@ -5,7 +5,9 @@ Registration and Authorization in Java
 
 Структура таблицы
 
-```CREATE TABLE IF NOT EXISTS `users` (
+
+```sql
+CREATE TABLE IF NOT EXISTS `users` (
   `id` int(11) NOT NULL,
   `login` varchar(255) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
@@ -19,4 +21,8 @@ COLLATE='utf8_unicode_ci'
 ENGINE=InnoDB
 AUTO_INCREMENT=1;
 ```
+
+## Contributing
+
+PRs are welcome. GL&HF!
 
