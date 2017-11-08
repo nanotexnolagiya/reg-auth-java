@@ -1,6 +1,7 @@
 package model;
 
 import com.sun.mail.smtp.SMTPTransport;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
 import javax.mail.*;
 import javax.mail.internet.*;
@@ -10,6 +11,23 @@ import java.util.List;
 import java.util.Properties;
 
 public class Users {
+    private static MimeMessage connSmtpMail() throws MessagingException {
+        Properties mailProps = new Properties();
+
+        mailProps.put("mail.transport.protocol","smtp");
+        mailProps.put("mail.smtp.host","mail.eduris.uz");
+        mailProps.put("mail.smtp.auth", "true");
+
+        Session session = Session.getInstance(mailProps,new Authenticator(){
+            protected PasswordAuthentication getPasswordAuthentication(){
+                return(new PasswordAuthentication("subscribe@eduris.uz","1^$QqR1)_f!9"));
+            }
+        });
+
+        MimeMessage message = new MimeMessage(session);
+        message.setFrom(new InternetAddress("subscribe@eduris.uz"));
+        return message;
+    }
     public String registration(String login, String email, String password) throws MessagingException {
         String token = TokenGenerator.md5Custom(TokenGenerator.generateToken());
         String rtoken = TokenGenerator.md5Custom(token);
@@ -31,29 +49,16 @@ public class Users {
         return token;
     }
     private static void sendActivateToken(String token, String email) throws MessagingException {
-        Properties mailProps = new Properties();
 
-        mailProps.put("mail.transport.protocol","smtp");
-        mailProps.put("mail.smtp.host","mail.eduris.uz");
-        mailProps.put("mail.smtp.auth", "true");
-
-        Session session = Session.getInstance(mailProps,new Authenticator(){
-            protected PasswordAuthentication getPasswordAuthentication(){
-                return(new PasswordAuthentication("subscribe@eduris.uz","1^$QqR1)_f!9"));
-            }
-        });
-
-        MimeMessage message = new MimeMessage(session);
-        message.setFrom(new InternetAddress("subscribe@eduris.uz"));
+        MimeMessage message = connSmtpMail();
         message.setRecipient(Message.RecipientType.TO, new InternetAddress(email));
-
         message.setSubject("Активация","utf-8");
         String text = "Чтобы активировать профил перейдите по ссылке\r\n";
         text += "loaclhost:8080/activate?token="+token+"\r\n";
         message.setText(text,"utf-8");
         Transport.send(message);
     }
-    private static Boolean issetEmail(String email){
+    public static Boolean issetEmail(String email){
         try (Connection conn = DB.getConnection();
         ){
             Statement stmt = conn.createStatement();
@@ -68,6 +73,16 @@ public class Users {
             e.printStackTrace();
             return false;
         }
+    }
+    public static void sendResetPassword(String email) throws MessagingException {
+        String rtoken = TokenGenerator.md5Custom(TokenGenerator.generateToken());
+        MimeMessage message = connSmtpMail();
+        message.setRecipient(Message.RecipientType.TO, new InternetAddress(email));
+        message.setSubject("Сбрось пароля","utf-8");
+        String text = "Чтобы сбросить пароль перейдите по ссылке\r\n";
+        text += "loaclhost:8080/new_password?m="+email+"&token="+rtoken+"\r\n";
+        message.setText(text,"utf-8");
+        Transport.send(message);
     }
 
     private static Boolean isValidEmailAddress(String email) {
